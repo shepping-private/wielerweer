@@ -1,0 +1,354 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wielerweer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#0D1117; --card:#161D27; --card-hi:#1C2530; --line:rgba(255,255,255,.07);
+    --txt:#F2F6FA; --muted:#6B7888; --hivis:#C8FA3C; --cool:#48A9F0;
+    --disp:'Rajdhani',system-ui,sans-serif; --ui:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--txt);font-family:var(--ui);-webkit-font-smoothing:antialiased}
+  body{max-width:440px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom));min-height:100vh}
+
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+  .brand h1{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:.06em;line-height:1}
+  .brand .loc{font-size:12.5px;color:var(--muted);margin-top:5px;display:flex;align-items:center;gap:6px}
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--muted);display:inline-block}
+  .refresh{background:var(--card);border:1px solid var(--line);color:var(--txt);width:40px;height:40px;border-radius:12px;cursor:pointer;display:grid;place-items:center;transition:.15s;flex:0 0 auto}
+  .refresh:active{transform:scale(.93)}
+  .refresh.spin svg{animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* modus + dag tabs */
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:10px}
+  .modes button{font-family:var(--disp);font-weight:700;letter-spacing:.06em;font-size:14px;text-transform:uppercase;color:var(--muted);background:transparent;border:0;padding:11px 4px;border-radius:10px;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:7px}
+  .modes button svg{opacity:.8}
+  .modes button.on{background:var(--card-hi);color:var(--txt);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+  .modes button.on svg{opacity:1}
+
+  .locbar{display:flex;gap:8px;margin-bottom:6px;position:relative;z-index:20}
+  .search{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+  .search svg{flex:0 0 auto;color:var(--muted)}
+  .search input{flex:1;background:transparent;border:0;outline:0;color:var(--txt);font-family:var(--ui);font-size:14px;padding:11px 0}
+  .search input::placeholder{color:var(--muted)}
+  .gps{background:var(--card);border:1px solid var(--line);color:var(--txt);width:44px;height:44px;border-radius:12px;cursor:pointer;display:grid;place-items:center;flex:0 0 auto;transition:.15s}
+  .gps:active{transform:scale(.93)}
+  .gps.busy svg{animation:spin .7s linear infinite}
+  .results{position:absolute;top:50px;left:0;right:56px;background:var(--card-hi);border:1px solid var(--line);border-radius:12px;overflow:hidden;z-index:30;box-shadow:0 12px 28px rgba(0,0,0,.4)}
+  .res{padding:11px 13px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--line);transition:.12s}
+  .res:last-child{border-bottom:0}
+  .res:hover,.res:active{background:rgba(255,255,255,.05)}
+  .res small{color:var(--muted);margin-left:6px}
+  .hint{font-size:11px;color:var(--muted);margin:0 2px 14px;line-height:1.4}
+
+  .tabbar-sticky{position:sticky;top:0;z-index:15;margin:0 -16px 16px;padding:8px 16px;background:var(--bg)}
+  .tabbar-sticky .toggle{margin-bottom:0}
+  .toggle{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:16px}
+  .toggle button{font-family:var(--disp);font-weight:600;letter-spacing:.03em;font-size:13px;text-transform:uppercase;color:var(--muted);background:transparent;border:0;padding:10px 2px;border-radius:9px;cursor:pointer;transition:.15s}
+  .toggle button.on{background:var(--card-hi);color:var(--txt);box-shadow:0 1px 0 rgba(255,255,255,.04) inset}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:12px}
+
+  /* commute leg header */
+  .leg{display:flex;align-items:baseline;gap:9px;margin-bottom:12px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+  .leg-when{font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:.04em;text-transform:uppercase}
+  .leg-loc{font-family:var(--disp);font-weight:600;font-size:14px;color:var(--cool);display:flex;align-items:center;gap:5px}
+
+  .hrow{display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line)}
+  .hrow:last-child{border-bottom:0}
+  .hrow.hr-head{padding:4px 4px 8px;border-bottom:1px solid var(--line);margin-bottom:2px}
+  .hrow.hr-head .rn-mm{font-family:var(--disp);font-weight:600;font-size:10.5px;letter-spacing:.1em;color:var(--muted)}
+  /* werk-modus: twee mm naast elkaar + gedeelde % gecentreerd eronder */
+  .hr-rain{display:flex;flex-direction:column;flex:0 0 auto;width:108px;line-height:1.2}
+  .hr-rain-cols{display:flex;justify-content:space-between;gap:12px}
+  .hr-rain-cols .rn-mm{width:48px;text-align:right;display:block}
+  .hr-rain .rn-p{text-align:center;width:100%;margin-top:1px}
+  .hr-t{font-family:var(--disp);font-weight:600;font-size:15px;width:32px;color:var(--muted);flex:0 0 auto;font-variant-numeric:tabular-nums}
+  .hr-ar{width:22px;flex:0 0 auto;display:grid;place-items:center}
+  .hr-w{display:flex;align-items:baseline;gap:6px;flex:1;min-width:0}
+  .hr-bft{font-family:var(--disp);font-weight:700;font-size:18px;padding:1px 7px;border-radius:7px;line-height:1.35}
+  .hr-tp{display:flex;align-items:center;gap:4px;font-family:var(--disp);font-weight:700;font-size:17px;flex:0 0 auto;width:52px;justify-content:flex-end}
+  .hr-rn{display:flex;flex-direction:column;align-items:flex-end;width:48px;flex:0 0 auto;line-height:1.2}
+  .rn-mm{font-family:var(--disp);font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;line-height:1.15}
+  .rn-p{font-size:10.5px;font-variant-numeric:tabular-nums;line-height:1.15}
+
+  .empty{text-align:center;color:var(--muted);font-size:14.5px;padding:34px 12px;line-height:1.7}
+  .empty span{font-size:12.5px;opacity:.8}
+
+  .err{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;text-align:center}
+  .err h3{font-family:var(--disp);font-weight:600;font-size:18px;margin-bottom:6px}
+  .err p{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .err button{margin-top:14px;background:var(--card-hi);border:1px solid var(--line);color:var(--txt);font-family:var(--disp);font-weight:600;padding:10px 20px;border-radius:11px;cursor:pointer}
+  .skel{opacity:.4;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.18}}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(8px);background:#222C38;border:1px solid var(--line);color:var(--txt);font-size:13px;padding:11px 16px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none;z-index:60;max-width:88%;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media (prefers-reduced-motion: reduce){.refresh.spin svg,.gps.busy svg{animation:none}}
+</style>
+
+<header>
+  <div class="brand">
+    <h1>WIELERWEER</h1>
+    <div class="loc" id="loc"><span class="skel">laden…</span></div>
+  </div>
+  <button class="refresh" id="refresh" aria-label="Vernieuwen">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+  </button>
+</header>
+
+<div class="modes">
+  <button id="m-rit" class="on">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5 10 7h4l2.5 4.5M9 7h5"/></svg>
+    Rit
+  </button>
+  <button id="m-werk">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    Werk
+  </button>
+</div>
+
+<div class="locbar" id="locbar">
+  <div class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+    <input id="q" placeholder="Andere plaats zoeken…" autocomplete="off" spellcheck="false">
+  </div>
+  <button class="gps" id="gps" aria-label="Mijn locatie">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.7-6-10a6 6 0 1 1 12 0c0 4.3-6 10-6 10Z"/><circle cx="12" cy="11" r="2.3"/></svg>
+  </button>
+  <div id="results"></div>
+</div>
+<div class="hint" id="hint">Standaard: Haalderen. Zoek een plaats of tik op het pin-icoon voor GPS.</div>
+
+<div class="tabbar-sticky">
+  <div class="toggle" id="tabs"></div>
+</div>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const HAALDEREN={lat:51.886,lon:5.942,name:"Haalderen"};
+const ARNHEM={lat:51.985,lon:5.899,name:"Arnhem"};
+const HUISSEN={lat:51.929,lon:5.940,name:"Huissen"};
+let state={mode:"rit",view:0,data:null,loc:HAALDEREN,werk:null,werkError:false,error:null,results:[]};
+
+function beaufort(k){const t=[1,6,12,20,29,39,50,62,75,89,103,118];for(let i=0;i<t.length;i++)if(k<t[i])return i;return 12;}
+const DIRS=["N","NNO","NO","ONO","O","OZO","ZO","ZZO","Z","ZZW","ZW","WZW","W","WNW","NW","NNW"];
+function dirNL(d){return DIRS[Math.round(d/22.5)%16];}
+function windColor(b){if(b<=1)return"#5B8DEF";if(b<=3)return"#33A8D6";if(b===4)return"#22B8A0";if(b===5)return"#E0A93B";if(b===6)return"#EF7E3C";return"#EF5C5C";}
+function tempColor(t){if(t<=2)return"#7FB2FF";if(t<=9)return"#9FD0EE";if(t<=16)return"#E6ECF2";if(t<=22)return"#FFC27A";if(t<=27)return"#FF8A3D";return"#FF6A4D";}
+function wmo(c){const m={0:["Onbewolkt","sun"],1:["Overwegend helder","sun"],2:["Half bewolkt","cloudsun"],3:["Bewolkt","cloud"],45:["Mist","fog"],48:["IJzelmist","fog"],51:["Lichte motregen","drizzle"],53:["Motregen","drizzle"],55:["Dichte motregen","drizzle"],56:["IJzel","drizzle"],57:["IJzel","drizzle"],61:["Lichte regen","rain"],63:["Regen","rain"],65:["Zware regen","rain"],66:["IJsregen","rain"],67:["IJsregen","rain"],71:["Lichte sneeuw","snow"],73:["Sneeuw","snow"],75:["Zware sneeuw","snow"],77:["Sneeuwkorrels","snow"],80:["Lichte buien","rain"],81:["Buien","rain"],82:["Zware buien","rain"],85:["Sneeuwbuien","snow"],86:["Sneeuwbuien","snow"],95:["Onweer","storm"],96:["Onweer + hagel","storm"],99:["Onweer + hagel","storm"]};return m[c]||["—","cloud"];}
+
+function icon(kind,size=46){
+  const st='stroke="currentColor" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  const set={
+    sun:`<circle cx="12" cy="12" r="4.2" ${st}/><g ${st}><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="5.2" y1="5.2" x2="6.9" y2="6.9"/><line x1="17.1" y1="17.1" x2="18.8" y2="18.8"/><line x1="18.8" y1="5.2" x2="17.1" y2="6.9"/><line x1="6.9" y1="17.1" x2="5.2" y2="18.8"/></g>`,
+    cloud:`<path d="M7 18h9.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 10 3.8 3.8 0 0 0 7 18Z" ${st}/>`,
+    cloudsun:`<g ${st}><circle cx="8" cy="8" r="2.6"/><line x1="8" y1="3.4" x2="8" y2="4.6"/><line x1="3.4" y1="8" x2="4.6" y2="8"/><line x1="4.9" y1="4.9" x2="5.7" y2="5.7"/><line x1="11.1" y1="4.9" x2="10.3" y2="5.7"/></g><path d="M8 19h8.5a3.2 3.2 0 0 0 .3-6.4A4.6 4.6 0 0 0 8.2 11 3.5 3.5 0 0 0 8 19Z" ${st}/>`,
+    rain:`<path d="M7 15h9.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 7 3.8 3.8 0 0 0 7 15Z" ${st}/><g ${st}><line x1="8.5" y1="18" x2="7.5" y2="20.5"/><line x1="12" y1="18" x2="11" y2="20.5"/><line x1="15.5" y1="18" x2="14.5" y2="20.5"/></g>`,
+    drizzle:`<path d="M7 15h9.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 7 3.8 3.8 0 0 0 7 15Z" ${st}/><g ${st}><line x1="9" y1="18" x2="8.6" y2="19.6"/><line x1="13" y1="18" x2="12.6" y2="19.6"/></g>`,
+    snow:`<path d="M7 15h9.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 7 3.8 3.8 0 0 0 7 15Z" ${st}/><g ${st}><line x1="9" y1="19" x2="9" y2="19.01"/><line x1="12" y1="20" x2="12" y2="20.01"/><line x1="15" y1="19" x2="15" y2="19.01"/></g>`,
+    fog:`<g ${st}><line x1="4" y1="9" x2="20" y2="9"/><line x1="5" y1="13" x2="19" y2="13"/><line x1="4" y1="17" x2="16" y2="17"/></g>`,
+    storm:`<path d="M7 13h9.5a3.5 3.5 0 0 0 .4-6.98A5 5 0 0 0 7.2 5 3.8 3.8 0 0 0 7 13Z" ${st}/><path d="M12 14l-2 3.5h3l-2 3.5" ${st}/>`
+  };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="color:var(--txt)">${set[kind]||set.cloud}</svg>`;
+}
+function arrowSVG(fromDeg,size=22){
+  const flow=(fromDeg+180)%360;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" style="transform:rotate(${flow}deg)"><path d="M12 2 L18 11 L13 11 L13 22 L11 22 L11 11 L6 11 Z" fill="var(--hivis)"/></svg>`;
+}
+function toast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),3200);}
+function dateForOffset(o){const b=new Date();b.setHours(0,0,0,0);const t=new Date(b);t.setDate(b.getDate()+o);return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;}
+
+/* ---------- data ---------- */
+async function fetchAll(lat,lon){
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+    +`&hourly=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation,precipitation_probability`
+    +`&timezone=auto&forecast_days=7&wind_speed_unit=kmh`;
+  const r=await fetch(url);if(!r.ok)throw new Error("weer");return r.json();
+}
+async function reverseGeo(lat,lon){
+  try{const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=nl`);const j=await r.json();return j.city||j.locality||j.principalSubdivision||"Jouw locatie";}catch{return"Jouw locatie";}
+}
+async function geocode(q){
+  try{const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=nl&format=json`);const j=await r.json();return j.results||[];}catch{return[];}
+}
+
+/* ---------- gedeelde uur-rij ---------- */
+function hourRow(h,i){
+  const bft=beaufort(h.wind_speed_10m[i]),wc=windColor(bft),[,kind]=wmo(h.weather_code[i]);
+  const prob=h.precipitation_probability[i]??0,mm=h.precipitation[i]||0,temp=Math.round(h.temperature_2m[i]);
+  return`<div class="hrow">
+    <div class="hr-t">${h.time[i].slice(11,13)}h</div>
+    <div class="hr-ar">${arrowSVG(h.wind_direction_10m[i],22)}</div>
+    <div class="hr-w"><span class="hr-bft" style="color:${wc};background:${wc}22">${bft}</span></div>
+    <div class="hr-tp" style="color:${tempColor(temp)}">${icon(kind,15)}${temp}°</div>
+    <div class="hr-rn"><div class="rn-mm" style="color:${mm>0?'var(--cool)':'var(--muted)'}">${mm.toFixed(1)}mm</div><div class="rn-p" style="color:${prob>=40?'var(--cool)':'var(--muted)'}">${prob}%</div></div>
+  </div>`;
+}
+function pickIndices(h,dateStr,startH,endH){
+  const idx=[];for(let i=0;i<h.time.length;i++){const day=h.time[i].slice(0,10),hr=+h.time[i].slice(11,13);if(day===dateStr&&hr>=startH&&hr<=endH)idx.push(i);}return idx;
+}
+
+/* ---------- RIT: één dag, 06h–21h ---------- */
+function renderDay(offset){
+  const h=state.data.hourly,dateStr=dateForOffset(offset);
+  const startH=offset===0?Math.max(6,new Date().getHours()):6;
+  const idx=pickIndices(h,dateStr,startH,21);
+  if(!idx.length)return`<div class="card"><div class="empty">Geen rituren meer voor vandaag.<br><span>Bekijk een andere dag-tab.</span></div></div>`;
+  const rows=idx.map(i=>hourRow(h,i)).join("");
+  return`<div class="card">${rows}</div>`;
+}
+
+/* ---------- WERK: ochtend Haalderen→Arnhem, middag Arnhem→Haalderen, weer uit Huissen ---------- */
+function hourRowWerk(hHui,hHaal,hArn,i){
+  const bft=beaufort(hHui.wind_speed_10m[i]),wc=windColor(bft),[,kind]=wmo(hHui.weather_code[i]);
+  const temp=Math.round(hHui.temperature_2m[i]);
+  const mH=hHaal.precipitation[i]||0,mA=hArn.precipitation[i]||0;
+  const prob=hHui.precipitation_probability[i]??0;
+  return`<div class="hrow">
+    <div class="hr-t">${hHui.time[i].slice(11,13)}h</div>
+    <div class="hr-ar">${arrowSVG(hHui.wind_direction_10m[i],22)}</div>
+    <div class="hr-w"><span class="hr-bft" style="color:${wc};background:${wc}22">${bft}</span></div>
+    <div class="hr-tp" style="color:${tempColor(temp)}">${icon(kind,15)}${temp}°</div>
+    <div class="hr-rain">
+      <div class="hr-rain-cols">
+        <span class="rn-mm" style="color:${mH>0?'var(--cool)':'var(--muted)'}">${mH.toFixed(1)}mm</span>
+        <span class="rn-mm" style="color:${mA>0?'var(--cool)':'var(--muted)'}">${mA.toFixed(1)}mm</span>
+      </div>
+      <div class="rn-p" style="color:${prob>=40?'var(--cool)':'var(--muted)'}">${prob}%</div>
+    </div>
+  </div>`;
+}
+function rainHeader(){
+  return`<div class="hrow hr-head">
+    <div class="hr-t"></div><div class="hr-ar"></div><div class="hr-w"></div><div class="hr-tp"></div>
+    <div class="hr-rain"><div class="hr-rain-cols"><span class="rn-mm">HAAL</span><span class="rn-mm">ARN</span></div></div>
+  </div>`;
+}
+function commuteLeg(label,dirText,dateStr,startH,endH){
+  const hui=state.werk.hui.hourly,haal=state.werk.haal.hourly,arn=state.werk.arn.hourly;
+  const idx=pickIndices(hui,dateStr,startH,endH);
+  if(!idx.length)return null;
+  const rows=idx.map(i=>hourRowWerk(hui,haal,arn,i)).join("");
+  return`<div class="card"><div class="leg"><span class="leg-when">${label}</span><span class="leg-loc">${dirText}</span></div>${rainHeader()}${rows}</div>`;
+}
+function renderWerk(offset){
+  const dateStr=dateForOffset(offset);
+  const cur=offset===0?new Date().getHours():0;
+  const och=commuteLeg("Ochtend","Haalderen → Arnhem",dateStr,Math.max(7,cur),11);
+  const mid=commuteLeg("Middag","Arnhem → Haalderen",dateStr,Math.max(15,cur),19);
+  if(!och&&!mid)return`<div class="card"><div class="empty">Werkdag voorbij.<br><span>Bekijk een andere dag-tab.</span></div></div>`;
+  return(och||"")+(mid||"");
+}
+
+/* ---------- render ---------- */
+function render(){
+  const app=document.getElementById("app");
+  if(state.mode==="werk"){
+    if(state.werkError){app.innerHTML=`<div class="err"><h3>Geen weerdata</h3><p>Kon Haalderen/Arnhem niet ophalen. Probeer opnieuw.</p><button onclick="refreshNow()">Opnieuw proberen</button></div>`;return;}
+    if(!state.werk){app.innerHTML=`<div class="card skel" style="height:200px"></div><div class="card skel" style="height:200px"></div>`;return;}
+    app.innerHTML=renderWerk(state.view);return;
+  }
+  if(state.error){app.innerHTML=`<div class="err"><h3>Geen weerdata</h3><p>${state.error}</p><button onclick="refreshNow()">Opnieuw proberen</button></div>`;return;}
+  if(!state.data){app.innerHTML=`<div class="card skel" style="height:340px"></div>`;return;}
+  app.innerHTML=renderDay(state.view);
+}
+function renderLoc(){
+  const n=new Date();const t=String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0");
+  const name=state.mode==="werk"?"Haalderen ⇄ Arnhem":(state.loc?.name||"…");
+  document.getElementById("loc").innerHTML=`<span>${name}</span><span class="dot"></span><span>${t}</span>`;
+}
+
+/* ---------- load ---------- */
+async function loadWeather(coords){
+  state.error=null;document.getElementById("refresh").classList.add("spin");
+  try{
+    const [data,name]=await Promise.all([fetchAll(coords.lat,coords.lon),coords.name?Promise.resolve(coords.name):reverseGeo(coords.lat,coords.lon)]);
+    state.data=data;state.loc={lat:coords.lat,lon:coords.lon,name:coords.name||name};
+    if(state.mode==="rit"){renderLoc();render();}
+  }catch(e){state.error="Kon de weergegevens niet ophalen. Controleer je verbinding en probeer opnieuw.";if(state.mode==="rit")render();}
+  finally{document.getElementById("refresh").classList.remove("spin");}
+}
+async function loadWerk(){
+  if(state.werk)return;
+  state.werkError=false;document.getElementById("refresh").classList.add("spin");
+  try{const [haal,arn,hui]=await Promise.all([fetchAll(HAALDEREN.lat,HAALDEREN.lon),fetchAll(ARNHEM.lat,ARNHEM.lon),fetchAll(HUISSEN.lat,HUISSEN.lon)]);state.werk={haal,arn,hui};}
+  catch(e){state.werkError=true;}
+  finally{document.getElementById("refresh").classList.remove("spin");if(state.mode==="werk")render();}
+}
+function refreshNow(){
+  if(state.mode==="werk"){state.werk=null;render();loadWerk();}
+  else{state.data=null;render();loadWeather(state.loc||HAALDEREN);}
+}
+
+function tryGPS(silent){
+  const btn=document.getElementById("gps");
+  if(!navigator.geolocation){if(!silent)toast("Geen GPS op dit apparaat");return;}
+  if(!silent)btn.classList.add("busy");
+  const done={v:false};
+  const to=setTimeout(()=>{if(done.v)return;done.v=true;btn.classList.remove("busy");if(!silent)toast("GPS reageert niet — zoek de plaats handmatig");},6500);
+  navigator.geolocation.getCurrentPosition(
+    async p=>{if(done.v)return;done.v=true;clearTimeout(to);btn.classList.remove("busy");document.getElementById("q").value="";await loadWeather({lat:p.coords.latitude,lon:p.coords.longitude,name:null});if(!silent)toast("Locatie gevonden");},
+    e=>{if(done.v)return;done.v=true;clearTimeout(to);btn.classList.remove("busy");if(!silent)toast("GPS geblokkeerd in deze preview — werkt wel in de gehoste versie");},
+    {timeout:6000,maximumAge:300000,enableHighAccuracy:false}
+  );
+}
+
+/* ---------- search ---------- */
+function showResults(list){const box=document.getElementById("results");if(!list.length){box.innerHTML="";return;}state.results=list;box.innerHTML=list.map((r,i)=>`<div class="res" onclick="pickResult(${i})">${r.name}<small>${[r.admin1,r.country_code].filter(Boolean).join(", ")}</small></div>`).join("");}
+async function pickResult(i){const r=state.results[i];if(!r)return;document.getElementById("results").innerHTML="";document.getElementById("q").value=r.name;await loadWeather({lat:r.latitude,lon:r.longitude,name:r.name});}
+let qTimer;
+document.getElementById("q").addEventListener("input",e=>{clearTimeout(qTimer);const q=e.target.value.trim();if(q.length<2){document.getElementById("results").innerHTML="";return;}qTimer=setTimeout(async()=>{showResults(await geocode(q));},350);});
+document.getElementById("q").addEventListener("blur",()=>setTimeout(()=>{document.getElementById("results").innerHTML="";},180));
+
+/* ---------- events ---------- */
+function getDayTabs(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const dowNames=['zo','ma','di','wo','do','vr','za'];
+  const tabs=[];
+  for(let offset=0;offset<7;offset++){
+    const d=new Date(today);d.setDate(today.getDate()+offset);
+    const dow=d.getDay(),weekend=dow===0||dow===6;
+    if(state.mode==="werk"&&weekend)continue;
+    tabs.push({offset,label:offset===0?'NU':dowNames[dow]});
+  }
+  return tabs;
+}
+function renderTabs(){
+  const tabs=getDayTabs();const el=document.getElementById('tabs');
+  el.style.gridTemplateColumns=`repeat(${tabs.length},1fr)`;
+  el.innerHTML=tabs.map(t=>`<button data-offset="${t.offset}" class="${t.offset===state.view?'on':''}">${t.label}</button>`).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>setView(parseInt(b.dataset.offset)));
+}
+function setView(v){state.view=v;renderTabs();render();}
+async function setMode(mode){
+  state.mode=mode;
+  document.getElementById("m-rit").classList.toggle("on",mode==="rit");
+  document.getElementById("m-werk").classList.toggle("on",mode==="werk");
+  const rit=mode==="rit";
+  document.getElementById("locbar").style.display=rit?"flex":"none";
+  document.getElementById("hint").style.display=rit?"block":"none";
+  const tabs=getDayTabs();
+  if(!tabs.find(t=>t.offset===state.view))state.view=tabs[0].offset;
+  renderTabs();
+  renderLoc();
+  if(mode==="werk"){render();await loadWerk();}
+  else render();
+}
+document.getElementById("m-rit").onclick=()=>setMode("rit");
+document.getElementById("m-werk").onclick=()=>setMode("werk");
+document.getElementById("refresh").onclick=refreshNow;
+document.getElementById("gps").onclick=()=>tryGPS(false);
+
+/* ---------- init: direct Haalderen, daarna GPS proberen ---------- */
+renderLoc();
+renderTabs();
+loadWeather(HAALDEREN).then(()=>tryGPS(true));
+</script>
